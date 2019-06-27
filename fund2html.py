@@ -1,6 +1,6 @@
 import html
 import random
-import urllib
+import urllib.request
 from pathlib import Path
 
 from fund_parser.extract import extract_fund_data
@@ -49,7 +49,7 @@ def xlsx_to_html(source: Path, target: Path):
             print("; ".join(f"<s>{x}</s>" for x in nodata), file=w)
 
 
-def main(sources, target):
+def main(sources, target, shuffle=False, just_show_one=False):
     sources_path = Path(sources)
     target_path = Path(target)
     target_path.mkdir(exist_ok=True)
@@ -61,7 +61,10 @@ def main(sources, target):
 
     paths = [p for p in sources_path.glob("**/*") if
              p.suffix.lower() == '.xlsx']
-    random.shuffle(paths)
+
+    if shuffle:
+        random.shuffle(paths)
+
     for i, source in enumerate(paths, 1):
         name = source.name.replace(" ", "_")
         target = target_path / f"{name}.html"
@@ -72,10 +75,11 @@ def main(sources, target):
 
         xlsx_to_html(source, target)
 
-        # import webbrowser
-        # webbrowser.open(str(target))
-        # break
+        if just_show_one:
+            import webbrowser
+            webbrowser.open(str(target))
+            break
 
 
 if __name__ == '__main__':
-    main("./sources/", "./out/")
+    main("./sources/", "./out/", True, True)
