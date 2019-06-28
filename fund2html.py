@@ -4,7 +4,6 @@ import urllib.request
 from pathlib import Path
 
 from fund_parser.extract import extract_fund_data
-from fund_parser.parsing import raw_to_array
 
 CSS_URL = "https://cdn.rtlcss.com/bootstrap/v4.2.1/css/bootstrap.css"
 
@@ -31,7 +30,7 @@ def xlsx_to_html(source: Path, target: Path):
         print('<div class="container-fluid" dir="rtl">', file=w)
         print(f'<h1 dir="ltr">{html.escape(str(source))}</h1>', file=w)
 
-        print(table(raw_to_array(main)) if main else "?", file=w)
+        print(table(main) if main is not None else "?", file=w)
 
         for name, df in sheets.items():
             if df is None:
@@ -49,7 +48,7 @@ def xlsx_to_html(source: Path, target: Path):
             print("; ".join(f"<s>{x}</s>" for x in nodata), file=w)
 
 
-def main(sources, target, shuffle=False, just_show_one=False):
+def main(sources, target, shuffle=False, just_show_one=False, overwrite=True):
     sources_path = Path(sources)
     target_path = Path(target)
     target_path.mkdir(exist_ok=True)
@@ -59,8 +58,7 @@ def main(sources, target, shuffle=False, just_show_one=False):
         print("downloading css...")
         urllib.request.urlretrieve(CSS_URL, css)
 
-    paths = [p for p in sources_path.glob("**/*") if
-             p.suffix.lower() == '.xlsx']
+    paths = list(sources_path.rglob("*.[xX][lL][sS][xX]"))
 
     if shuffle:
         random.shuffle(paths)
@@ -68,8 +66,9 @@ def main(sources, target, shuffle=False, just_show_one=False):
     for i, source in enumerate(paths, 1):
         name = source.name.replace(" ", "_")
         target = target_path / f"{name}.html"
-        if target.exists():
-            continue
+        if not overwrite:
+            if target.exists():
+                continue
 
         print(i, len(paths), target)
 

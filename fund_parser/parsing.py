@@ -1,10 +1,6 @@
-import re
-
 import numpy as np
 
 from fund_parser.consts import EMPTY, BAD_COLS, BAD_NAMES
-
-is_empty = re.compile(r"^0?\.0+$").match
 
 
 def remove_empty_cols(a: np.ndarray):
@@ -65,7 +61,8 @@ def extract_rows(raw):
     # remove short lines
     value_counts = (data != "").sum(axis=1)
     good_rows = value_counts > value_counts.max() / 1.5
-    values = data[good_rows]
+    data = data[good_rows]
+    values = remove_empty_cols(data)  # yes, again.
 
     raw_header = {c.strip().strip("*"): i for i, c in enumerate(values[0])}
     first = values[0][0].strip()
@@ -75,9 +72,8 @@ def extract_rows(raw):
     for row in values[1:]:
         if row[row != ""][0] in BAD_COLS:
             continue
-        vals = {k: get_best_dtype(row[v].strip()) for k, v in raw_header.items()}
-        # if all(not v or is_empty(v) for v in vals.values())
-        #     continue
+        vals = {k: get_best_dtype(row[v].strip()) for k, v in
+                raw_header.items()}
         if vals[first] in BAD_NAMES:
             continue
         records.append(vals)
