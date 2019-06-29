@@ -64,18 +64,23 @@ def extract_rows(raw):
     data = data[good_rows]
     values = remove_empty_cols(data)  # yes, again.
 
-    raw_header = {c.strip().strip("*"): i for i, c in enumerate(values[0])}
-    first = values[0][0].strip()
+    header = []
+    untitled = 0
+    for c in values[0]:
+        v = c.strip().strip("*")
+        if not v:
+            untitled += 1
+            v = f"untitled{untitled}"
+        header.append(v)
 
     records = []
 
     for row in values[1:]:
         if row[row != ""][0] in BAD_COLS:
             continue
-        vals = {k: get_best_dtype(row[v].strip()) for k, v in
-                raw_header.items()}
-        if vals[first] in BAD_NAMES:
+        vals = [get_best_dtype(v.strip()) for v in row]
+        if vals[0] in BAD_NAMES:
             continue
         records.append(vals)
 
-    return raw_header, records
+    return header, records

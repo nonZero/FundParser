@@ -17,8 +17,8 @@ def extract_fund_data(filename, always_return_dataframes=False,
             continue
         if not raw:
             continue
-        header, v = extract_rows(raw)
-        data[name] = (pd.DataFrame(v, columns=header)
-                      if v or always_return_dataframes else None)
+        header, rows = extract_rows(raw)
+        data[name] = (pd.DataFrame(rows, columns=header)
+                      if rows or always_return_dataframes else None)
 
     return main_sheet, data
