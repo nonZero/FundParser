@@ -1,9 +1,11 @@
 import argparse
-import html
 import logging
 import random
 import urllib.request
+from functools import lru_cache
 from pathlib import Path
+
+from jinja2 import Template
 
 from fund_parser.extract import extract_fund_data
 
@@ -12,44 +14,29 @@ logger = logging.getLogger(__name__)
 CSS_URL = "https://cdn.rtlcss.com/bootstrap/v4.2.1/css/bootstrap.css"
 
 
-def _row(row):
-    return "\t<tr>{}</tr>".format(
-        "\n".join("\t\t<td>{}</td>".format(
-            html.escape(str(cell))
-        ) for cell in row)
-    )
-
-
-def table(data):
-    return '<table class="table table-sm table-bordered table-hover">{}</table>'.format(
-        "\n".join(_row(row) for row in data)
-    )
+@lru_cache()
+def load_template():
+    with open("template.html") as f:
+        return Template(f.read())
 
 
 def xlsx_to_html(source: Path, target: Path):
     main, sheets = extract_fund_data(str(source))
-    nodata = []
+    template = load_template()
+    nodata = [name for name, df in sheets.items() if df is None]
+    tables = [(name, df.to_html(
+        index=False,
+        float_format="{:n}".format,
+        classes="table table-striped table-bordered table-hover table-sm",
+    )) for name, df in sheets.items() if df is not None]
+
     with target.open("w") as w:
-        print('<link rel="stylesheet" href="bootstrap.css"/>', file=w)
-        print('<div class="container-fluid" dir="rtl">', file=w)
-        print(f'<h1 dir="ltr">{html.escape(str(source))}</h1>', file=w)
-
-        print(table(main) if main is not None else "?", file=w)
-
-        for name, df in sheets.items():
-            if df is None:
-                nodata.append(name)
-                continue
-            print(f"<h2>{html.escape(name)}</h2>", file=w)
-            print(df.to_html(
-                index=False,
-                float_format="{:n}".format,
-                classes="table table-striped table-bordered table-hover table-sm",
-            ), file=w)
-
-        if nodata:
-            print("<hr/>", file=w)
-            print("; ".join(f"<s>{x}</s>" for x in nodata), file=w)
+        w.write(template.render(
+            filename=str(source),
+            main=main,
+            sheets=tables,
+            nodata=nodata,
+        ))
 
 
 def process_folder(sources, target, shuffle=False, preview=False,

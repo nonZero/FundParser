@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="he">
+<head>
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>{{ filename }}</title>
+    <link rel="stylesheet" href="bootstrap.css"/>
+</head>
+<body>
+
+<div class="container-fluid" dir="rtl">
+
+    <h1 dir="ltr">{{ filename }}</h1>
+
+    {% if main is not none %}
+        <table class="table table-sm table-bordered table-hover">
+            {% for row in main %}
+                <tr>
+                    {% for cell in row %}
+                        <td>{{ cell }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    <hr/>
+
+    {% for name, sheet in sheets %}
+        <h2>{{ name }}</h2>
+        {{ sheet|safe }}
+    {% endfor %}
+
+    <hr/>
+
+    <ul class="list list-inline">
+        {% for x in nodata %}
+            <li class="list-inline-item"><s>{{ x }}</s></li>
+        {% endfor %}
+    </ul>
+
+</div>
+
+</body>
+</html>
