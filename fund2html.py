@@ -1,3 +1,4 @@
+import argparse
 import html
 import random
 import urllib.request
@@ -48,7 +49,7 @@ def xlsx_to_html(source: Path, target: Path):
             print("; ".join(f"<s>{x}</s>" for x in nodata), file=w)
 
 
-def main(sources, target, shuffle=False, just_show_one=False, overwrite=True):
+def process_folder(sources, target, shuffle=False, preview=False, overwrite=True):
     sources_path = Path(sources)
     target_path = Path(target)
     target_path.mkdir(exist_ok=True)
@@ -74,11 +75,27 @@ def main(sources, target, shuffle=False, just_show_one=False, overwrite=True):
 
         xlsx_to_html(source, target)
 
-        if just_show_one:
+        if preview:
             import webbrowser
             webbrowser.open(str(target))
             break
 
 
 if __name__ == '__main__':
-    main("./sources/", "./out/", True, True)
+    parser = argparse.ArgumentParser(
+        description='Convert fund xlsx files to HTML')
+    parser.add_argument('sources', type=str,
+                        help='path to folder containing xlsx files')
+    parser.add_argument('target', type=str,
+                        help='path to folder for generated html files')
+    parser.add_argument('--shuffle', action='store_true',
+                        help='randomize order of files before processing')
+    parser.add_argument('--preview', action='store_true',
+                        help='Process only the first file, open it in a browser window and quit')
+    parser.add_argument('--skip-existing', dest='overwrite',
+                        action='store_false',
+                        help='Skip existing files')
+
+    args = parser.parse_args()
+
+    process_folder(**args.__dict__)
