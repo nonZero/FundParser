@@ -1,10 +1,13 @@
 import argparse
 import html
+import logging
 import random
 import urllib.request
 from pathlib import Path
 
 from fund_parser.extract import extract_fund_data
+
+logger = logging.getLogger(__name__)
 
 CSS_URL = "https://cdn.rtlcss.com/bootstrap/v4.2.1/css/bootstrap.css"
 
@@ -49,17 +52,20 @@ def xlsx_to_html(source: Path, target: Path):
             print("; ".join(f"<s>{x}</s>" for x in nodata), file=w)
 
 
-def process_folder(sources, target, shuffle=False, preview=False, overwrite=True):
+def process_folder(sources, target, shuffle=False, preview=False,
+                   overwrite=True):
     sources_path = Path(sources)
     target_path = Path(target)
     target_path.mkdir(exist_ok=True)
 
     css = target_path / "bootstrap.css"
     if not css.exists():
-        print("downloading css...")
+        logger.warning("downloading css...")
         urllib.request.urlretrieve(CSS_URL, css)
 
     paths = list(sources_path.rglob("*.[xX][lL][sS][xX]"))
+
+    logger.info(f"Found {len(paths)} files in {sources!r}")
 
     if shuffle:
         random.shuffle(paths)
@@ -71,7 +77,7 @@ def process_folder(sources, target, shuffle=False, preview=False, overwrite=True
             if target.exists():
                 continue
 
-        print(i, len(paths), target)
+        logger.info(f"[{i}/{len(paths)}] {str(target)!r}")
 
         xlsx_to_html(source, target)
 
@@ -97,5 +103,10 @@ if __name__ == '__main__':
                         help='Skip existing files')
 
     args = parser.parse_args()
+
+    logging.basicConfig(
+        format='[%(levelname).1s %(asctime).19s %(module)s:%(lineno)d] %(message)s',
+        level=logging.INFO,
+    )
 
     process_folder(**args.__dict__)
