@@ -50,7 +50,7 @@ def process_folder(sources, target, shuffle=False, preview=False,
         logger.warning("downloading css...")
         urllib.request.urlretrieve(CSS_URL, css)
 
-    paths = list(sources_path.rglob("*.[xX][lL][sS][xX]"))
+    paths = list(sources_path.rglob("*.[xX][lL][sS][xX]?"))
 
     logger.info(f"Found {len(paths)} files in {sources!r}")
 

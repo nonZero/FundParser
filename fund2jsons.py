@@ -36,7 +36,7 @@ def process_folder(sources, target, shuffle=False, preview=False,
     target_path = Path(target)
     target_path.mkdir(exist_ok=True)
 
-    paths = list(sources_path.rglob("*.[xX][lL][sS][xX]"))
+    paths = list(sources_path.rglob("*.[xX][lL][sS][xX]?"))
 
     logger.info(f"Found {len(paths)} files in {sources!r}")
 
